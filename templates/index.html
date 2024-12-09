@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Table App</title>
+    <title>Flask Task Manager</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <div style="margin-right: 20px">
+    <div style="margin-right: 20px; padding: 20px;">
         <h2>Add a New Task</h2>
-        <form action="/" method="post" style="padding: 20px;">
+        <form action="/" method="post">
             <label for="task">Task:</label>
             <input type="text" id="task" name="task" required><br><br>
-    
+
             <label for="project">Related ID:</label>
             <input type="text" id="project" name="project"><br><br>
-    
+
             <label for="deadline">Deadline:</label>
             <input type="date" id="deadline" name="deadline" required><br><br>
-    
+
             <button type="submit">Add Task</button>
         </form>
     </div>
@@ -29,8 +29,9 @@
             <tr>
                 <th>ID</th>
                 <th>Task</th>
+                <th>Project</th>
                 <th>Deadline</th>
-                <th>Completed</th>
+                <th>Edit</th>
             </tr>
         </thead>
         <tbody>
@@ -38,15 +39,45 @@
             <tr>
                 <td>{{ entry[0] }}</td>
                 <td>{{ entry[1] }}</td>
+                <td>{{ entry[2] }}</td>
                 <td>{{ entry[4] }}</td>
-                <td width="40px">
-                    <form action="/complete/{{ entry[0] }}" method="post">
-                        <input type="checkbox" onchange="this.form.submit()">
-                    </form>
+                <td>
+                    <button onclick="showEditForm('{{ entry[0] }}', '{{ entry[1] }}', '{{ entry[4] }}')">Edit</button>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <!-- Hidden Edit Form -->
+    <div id="edit-form-container" style="display: none; margin-top: 20px;">
+        <h2>Edit Task</h2>
+        <form action="/" method="post">
+            <input type="hidden" id="edit-id" name="id">
+
+            <label for="edit-task">Task:</label>
+            <input type="text" id="edit-task" name="task" required><br><br>
+
+            <label for="edit-deadline">Deadline:</label>
+            <input type="date" id="edit-deadline" name="deadline" required><br><br>
+
+            <button type="submit">Update Task</button>
+            <button type="button" onclick="hideEditForm()">Cancel</button>
+        </form>
+    </div>
+
+    <script>
+        function showEditForm(id, task, deadline) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-task').value = task;
+            document.getElementById('edit-deadline').value = deadline;
+            document.getElementById('edit-form-container').style.display = 'block';
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
+        function hideEditForm() {
+            document.getElementById('edit-form-container').style.display = 'none';
+        }
+    </script>
 </body>
 </html>

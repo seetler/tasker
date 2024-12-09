@@ -1,64 +1,60 @@
 import csv
 from flask import Flask, render_template, request, redirect
 from datetime import datetime
-from key import *
+from key import *  # Ensure this file contains the 'portto' variable
 
 app = Flask(__name__)
 CSV_FILE = "data.csv"
 
+# Function to read CSV entries
+def read_csv():
+    with open(CSV_FILE, "r", newline="") as file:
+        reader = csv.reader(file)
+        return list(reader)
+
+# Function to write CSV entries
+def write_csv(rows):
+    with open(CSV_FILE, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerows(rows)
+
+# Route to display tasks and handle adding new tasks
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        # Handle form submission for adding a new task
+        task_id = request.form.get("id")
         task = request.form["task"]
         project = request.form["project"]
         deadline = request.form["deadline"]
         date_added = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Determine the next ID
-        with open(CSV_FILE, "r", newline="") as file:
-            reader = csv.reader(file)
-            rows = list(reader)
-            new_id = len(rows)  # Use the row count as the ID
+        rows = read_csv()
 
-        # Add new entry to CSV with completed defaulting to 0 (incomplete)
-        with open(CSV_FILE, "a", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow([new_id, task, project, date_added, deadline, 0])
+        if task_id:  # If ID exists, it's an edit operation
+            for row in rows:
+                if row[0] == task_id:
+                    row[1] = task
+                    row[4] = deadline
+                    break
+        else:  # Otherwise, it's a new task
+            new_id = len(rows)
+            rows.append([str(new_id), task, project, date_added, deadline, '0'])
 
+        write_csv(rows)
         return redirect("/")
 
-    # Fetch all entries from CSV
-    with open(CSV_FILE, "r", newline="") as file:
-        reader = csv.reader(file)
-        entries = list(reader)[1:]  # Skip the header row
+    # Fetch all entries from CSV where completed is 0
+    rows = read_csv()
+    entries = [row for row in rows[1:] if row[5] == '0']
 
-    # Filter only incomplete tasks (completed = 0)
-    incomplete_entries = [entry for entry in entries if entry[5] == "0"]
+    return render_template("index.html", entries=entries, show_edit_form=False)
 
-    # Sort entries by deadline (ascending)
-    entries_sorted = sorted(incomplete_entries, key=lambda x: datetime.strptime(x[4], "%Y-%m-%d"))
-
-    return render_template("index.html", entries=entries_sorted)
-
-@app.route("/complete/<task_id>", methods=["POST"])
-def complete_task(task_id):
-    # Mark a task as completed by updating the CSV
-    with open(CSV_FILE, "r", newline="") as file:
-        reader = csv.reader(file)
-        rows = list(reader)
-
-    # Update the row where the ID matches the task_id
-    for row in rows:
-        if row[0] == task_id:
-            row[5] = "1"  # Set completed to 1 (True)
-
-    # Write the updated data back to the CSV
-    with open(CSV_FILE, "w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerows(rows)
-
-    return redirect("/")
+# Route to handle editing a specific task by ID
+@app.route("/edit/<id>")
+def edit(id):
+    rows = read_csv()
+    entry = next((row for row in rows if row[0] == id), None)
+    return render_template("index.html", entries=rows[1:], edit_entry=entry, show_edit_form=True)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=portto, debug=True)
