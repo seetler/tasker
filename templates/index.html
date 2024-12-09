@@ -3,13 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Task Manager</title>
+    <title>Task Manager</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function submitCheckbox(form) {
+            form.submit();
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
 </head>
 <body>
     <div style="margin-right: 20px; padding: 20px;">
         <h2>Add a New Task</h2>
-        <form action="/" method="post">
+        <form action="/" method="post" style="padding:20px;">
             <label for="task">Task:</label>
             <input type="text" id="task" name="task" required><br><br>
 
@@ -29,8 +38,9 @@
             <tr>
                 <th>ID</th>
                 <th>Task</th>
-                <th>Project</th>
+                <th>Date Added</th>
                 <th>Deadline</th>
+                <th>Complete</th>
                 <th>Edit</th>
             </tr>
         </thead>
@@ -39,45 +49,41 @@
             <tr>
                 <td>{{ entry[0] }}</td>
                 <td>{{ entry[1] }}</td>
-                <td>{{ entry[2] }}</td>
+                <td>{{ entry[3] }}</td>
                 <td>{{ entry[4] }}</td>
                 <td>
-                    <button onclick="showEditForm('{{ entry[0] }}', '{{ entry[1] }}', '{{ entry[4] }}')">Edit</button>
+                    <form action="/complete/{{ entry[0] }}" method="post">
+                        <input type="checkbox" onchange="submitCheckbox(this.form)">
+                    </form>
+                </td>
+                <td>
+                    <form action="/edit/{{ entry[0] }}" method="get" style="display: inline;">
+                        <button type="submit" onclick="scrollToTop()">Edit</button>
+                    </form>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <!-- Hidden Edit Form -->
-    <div id="edit-form-container" style="display: none; margin-top: 20px;">
+    {% if show_edit_form %}
+    <div id="edit-form" style="margin-top: 20px;">
         <h2>Edit Task</h2>
-        <form action="/" method="post">
-            <input type="hidden" id="edit-id" name="id">
+        <form action="/" method="post"   style="padding:20px;">
+            <input type="hidden" name="id" value="{{ edit_entry[0] }}">
+            <label for="task">Task:</label>
+            <input type="text" id="task" name="task" value="{{ edit_entry[1] }}" required><br><br>
 
-            <label for="edit-task">Task:</label>
-            <input type="text" id="edit-task" name="task" required><br><br>
+            <label for="project">Project:</label>
+            <input type="text" id="project" name="project" value="{{ edit_entry[2] }}"><br><br>
 
-            <label for="edit-deadline">Deadline:</label>
-            <input type="date" id="edit-deadline" name="deadline" required><br><br>
+            <label for="deadline">Deadline:</label>
+            <input type="date" id="deadline" name="deadline" value="{{ edit_entry[4] }}" required><br><br>
 
             <button type="submit">Update Task</button>
-            <button type="button" onclick="hideEditForm()">Cancel</button>
+            <button type="button" onclick="window.location.href='/'">Cancel</button>
         </form>
     </div>
-
-    <script>
-        function showEditForm(id, task, deadline) {
-            document.getElementById('edit-id').value = id;
-            document.getElementById('edit-task').value = task;
-            document.getElementById('edit-deadline').value = deadline;
-            document.getElementById('edit-form-container').style.display = 'block';
-            window.scrollTo(0, document.body.scrollHeight);
-        }
-
-        function hideEditForm() {
-            document.getElementById('edit-form-container').style.display = 'none';
-        }
-    </script>
+    {% endif %}
 </body>
 </html>

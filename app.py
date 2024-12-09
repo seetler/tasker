@@ -18,7 +18,7 @@ def write_csv(rows):
         writer = csv.writer(file)
         writer.writerows(rows)
 
-# Route to display tasks and handle adding new tasks
+# Route to display tasks and handle adding/updating tasks
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
@@ -34,6 +34,7 @@ def index():
             for row in rows:
                 if row[0] == task_id:
                     row[1] = task
+                    row[2] = project
                     row[4] = deadline
                     break
         else:  # Otherwise, it's a new task
@@ -48,6 +49,17 @@ def index():
     entries = [row for row in rows[1:] if row[5] == '0']
 
     return render_template("index.html", entries=entries, show_edit_form=False)
+
+# Route to mark a task as completed
+@app.route("/complete/<id>", methods=["POST"])
+def complete(id):
+    rows = read_csv()
+    for row in rows:
+        if row[0] == id:
+            row[5] = '1'  # Mark task as completed
+            break
+    write_csv(rows)
+    return redirect("/")
 
 # Route to handle editing a specific task by ID
 @app.route("/edit/<id>")
