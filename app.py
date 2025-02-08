@@ -69,4 +69,5 @@ def edit(id):
     return render_template("index.html", entries=rows[1:], edit_entry=entry, show_edit_form=True)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=portto, debug=True)
+    app.run(host='0.0.0.0', port=portto, ssl_context=("/etc/letsencrypt/live/app.civiccodeai.com/fullchain.pem",
+                                                    "/etc/letsencrypt/live/app.civiccodeai.com/privkey.pem"))
